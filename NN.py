@@ -1,6 +1,5 @@
 import numpy as np 
 
-
 def activation_functions(activation, x):
 
     if activation == 'softmax':
@@ -18,15 +17,19 @@ class Sequential:
     def add(self, layer):
         self.layers.append(layer)
 
-    def fit(x, y):
-        output = self.layers[0].forward(x)
+    def train_model(self, x, output_data=None):
+        self.output = self.layers[0].forward(x)
 
+        print("===============================================================")
+        print(f"({1}/{len(self.layers)}) {1} Model trained")
+        print("---------------------------------------------------------------")
         for i in range(1, len(self.layers)):
-            output = self.layers[1].forward(output)
-            output = self.layers[1].forward(output)
-
-        for layer in self.layers[2:]:
-            output = layer_1.forward(inputs)
+            self.output = self.layers[i].forward(self.output)
+            print(f"({i+2}/{len(self.layers)}) {i+2} Model trained")
+            print("---------------------------------------------------------------")
+    
+    def predict_input(self):
+        return self.output
 
 class Dense:
     def __init__(self, shapes, activation, use_bias=True):
@@ -34,7 +37,7 @@ class Dense:
         self.activation = activation
         self.use_bias= use_bias
 
-        self.weights = np.random.uniform(-1, 1, shape=shapes)
+        self.weights = np.random.uniform(-1, 1, size=self.shapes)
         self.bias = np.random.uniform(-1, 1)
 
     def forward(self, input_data):
