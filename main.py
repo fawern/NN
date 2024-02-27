@@ -1,7 +1,7 @@
 import numpy as np 
 
-from Nn import Sequential
-from Nn import Dense
+from Nn import Layers
+from Nn import NLayer
 
 inputs = []
 outputs = []
@@ -28,12 +28,12 @@ def generate_data(num_row):
 
 X_train, y_train = generate_data(5)
 
-model = Sequential()
+model = Layers()
 
-model.add(Dense(shapes=(X_train.shape[1], 256), activation='softmax', use_bias=True))
-model.add(Dense(shapes=(256, 128), activation='softmax', use_bias=True))
-model.add(Dense(shapes=(128, 64), activation='softmax', use_bias=True))
-model.add(Dense(shapes=(64, 1), activation='sigmoid', use_bias=True))
+model.add(NLayer(shapes=(X_train.shape[1], 256), activation='softmax', use_bias=True))
+model.add(NLayer(shapes=(256, 128), activation='softmax', use_bias=True))
+model.add(NLayer(shapes=(128, 64), activation='softmax', use_bias=True))
+model.add(NLayer(shapes=(64, 1), activation='sigmoid', use_bias=True))
 
 model.train_model(x=X_train)
 

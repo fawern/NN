@@ -10,7 +10,7 @@ def activation_functions(activation, x):
     else:
         raise ValueError(f"{activation_func} is not a valid activation function!!!")
 
-class Sequential:
+class Layers:
     def __init__(self):
         self.layers = []
 
@@ -31,7 +31,7 @@ class Sequential:
     def predict_input(self):
         return self.output
 
-class Dense:
+class NLayer:
     def __init__(self, shapes, activation, use_bias=True):
         self.shapes = shapes
         self.activation = activation
