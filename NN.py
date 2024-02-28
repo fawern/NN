@@ -15,19 +15,25 @@ class ActivationFunctions:
         Args:
             - activation (str): The activation function to use.
             - x (np.array): The input data.
-        
+
         Returns:
             - np.array: The output data after applying the activation function.
         """
-        
-        self.activation_functions_dict = {
-                "sigmoid" : 1 / (1 + np.exp(-x)), 
-                "softmax" : np.exp(x) / np.sum(np.exp(x), axis=0),
-                'tanh' : (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x)),
-                # 'relu' : max(0, x)
-            }
+
         try:
-            return self.activation_functions_dict[activation]
+            if activation == 'sigmoid': return 1 / (1 + np.exp(-x))
+            elif activation == 'softmax': return np.exp(x) / np.sum(np.exp(x), axis=0)
+            elif activation == 'tanh': return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
+            elif activation == 'relu': return x if x > 0 else 0
+
+            # self.activation_functions_dict = {
+            #         "sigmoid" : 1 / (1 + np.exp(-x)), 
+            #         "softmax" : np.exp(x) / np.sum(np.exp(x), axis=0),
+            #         'tanh' : (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x)),
+            #         'relu' : x if x > 0 else 0
+            #     }
+        
+            # return self.activation_functions_dict[activation]
 
         except:
             raise ValueError(f"{activation} is not a valid activation function!!!")
@@ -81,6 +87,14 @@ class Layers:
     def predict_input(self):
         return self.output
 
+class NInput:
+    """"
+    # Input Layer.
+    """
+    def __init__(self, input_shapes):
+        self.input_shapes = input_shapes
+
+
 class NLayer:
     """
     # Simple Multi-Layer-Perceptron Layer.
@@ -94,14 +108,15 @@ class NLayer:
         - weights are initialized with random values between -1 and 1.and
         - bias is initialized with random value between -1 and 1. 
     """
-    def __init__(self, shapes, activation, use_bias=True, function_name=None, function_formula=None):
-        self.shapes = shapes
+    def __init__(self, num_neurons, output_shape, activation, use_bias=True, function_name=None, function_formula=None):
+        self.num_neurons = num_neurons
+        self.output_shape = output_shape
         self.activation = activation
         self.use_bias= use_bias
         self.function_name = function_name
         self.function_formula = function_formula
 
-        self.weights = np.random.uniform(-1, 1, size=self.shapes)
+        self.weights = np.random.uniform(-1, 1, size=(self.num_neurons, self.output_shape))
         self.bias = np.random.uniform(-1, 1)
 
     def forward(self, input_data):
@@ -117,6 +132,6 @@ class NLayer:
 
         if self.use_bias: 
             self.output += self.bias
-
+            
         self.output = activation_function.activation_functions(self.activation, self.output)
         return self.output

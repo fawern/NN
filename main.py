@@ -2,6 +2,7 @@ import numpy as np
 
 from Nn import Layers
 from Nn import NLayer
+from Nn import NInput
 
 inputs = []
 outputs = []
@@ -39,20 +40,21 @@ class DataGenerator:
                 outputs.append(output)
         return np.array(inputs), np.array(outputs)
 
-
 data_generator = DataGenerator(5)
 data_generator.add_feature([1, 2, 3, 4, 5, 6, 7])
 
 X_train, y_train = data_generator.generate_data()
 
 y_train = y_train.reshape(-1, 1)
-
+ 
 model = Layers()
 
-model.add(NLayer(shapes=(X_train.shape[1], 256), activation='softmax', use_bias=True))
-model.add(NLayer(shapes=(256, 128), activation='softmax', use_bias=True))
-model.add(NLayer(shapes=(128, 64), activation='softmax', use_bias=True))
-model.add(NLayer(shapes=(64, y_train.shape[1]), activation='sigmoid', use_bias=True))
+# model.add(NInput(shapes=((X_train.shape[1], 256))))
+
+model.add(NLayer(num_neurons=X_train.shape[1], output_shape= 256, activation='softmax', use_bias=True))
+model.add(NLayer(num_neurons=256, output_shape= 128, activation='softmax', use_bias=True))
+model.add(NLayer(num_neurons=128, output_shape= 64, activation='softmax', use_bias=True))
+model.add(NLayer(num_neurons=64, output_shape= y_train.shape[1], activation='sigmoid', use_bias=True))
 
 model.train_model(x=X_train)
 
