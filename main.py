@@ -6,41 +6,60 @@ from Nn import NLayer
 inputs = []
 outputs = []
 
-def generate_data(num_row):
-    for i in range(num_row):
-        height = np.random.uniform(0.5, 2.5)
-        weight = np.random.randint(10, 200)
+class DataGenerator:
+    def __init__(self, num_row):
+        self.num_row = num_row
+        self.features = []
 
-        # eye_colors = ['Blue', 'Green', 'Brown', 'Hazel', 'Gray', 'Amber', 'Black']
-        eye_colors = [1, 2, 3, 4, 5, 6, 7]
-        eye_color =  np.random.choice(eye_colors)
+    def add_feature(self, feature):
+        self.features.append(feature)
 
-        # hair_colors = ['Black', 'Brown', 'Blonde', 'Red', 'Gray', 'White', 'Auburn']
-        hair_colors = [1, 2, 3, 4, 5, 6, 7]
-        hair_color = np.random.choice(hair_colors)
+    def generate_data(self):
+        for i in range(self.num_row):
+            height = np.random.uniform(0.5, 2.5)
+            weight = np.random.randint(10, 200)
 
-        output = np.random.randint(0, 2)
+            # eye_colors = ['Blue', 'Green', 'Brown', 'Hazel', 'Gray', 'Amber', 'Black']
+            eye_colors = [1, 2, 3, 4, 5, 6, 7]
+            eye_color =  np.random.choice(eye_colors)
 
-        inputs.append([height, weight, eye_color, hair_color])
-        outputs.append(output)
+            # hair_colors = ['Black', 'Brown', 'Blonde', 'Red', 'Gray', 'White', 'Auburn']
+            hair_colors = [1, 2, 3, 4, 5, 6, 7]
+            hair_color = np.random.choice(hair_colors)  
 
-    return np.array(inputs), np.array(outputs)
+            output = np.random.randint(0, 2)
 
-X_train, y_train = generate_data(5)
+            if self.features != []:
+                selected_feature = [np.random.choice(feature) for feature in self.features][0]
+                inputs.append([height, weight, eye_color, hair_color, selected_feature])
+                outputs.append(output)
+                
+            else: 
+                inputs.append([height, weight, eye_color, hair_color])
+                outputs.append(output)
+        return np.array(inputs), np.array(outputs)
+
+
+data_generator = DataGenerator(5)
+data_generator.add_feature([1, 2, 3, 4, 5, 6, 7])
+
+X_train, y_train = data_generator.generate_data()
+
+y_train = y_train.reshape(-1, 1)
 
 model = Layers()
 
 model.add(NLayer(shapes=(X_train.shape[1], 256), activation='softmax', use_bias=True))
 model.add(NLayer(shapes=(256, 128), activation='softmax', use_bias=True))
 model.add(NLayer(shapes=(128, 64), activation='softmax', use_bias=True))
-model.add(NLayer(shapes=(64, 1), activation='sigmoid', use_bias=True))
+model.add(NLayer(shapes=(64, y_train.shape[1]), activation='sigmoid', use_bias=True))
 
 model.train_model(x=X_train)
 
 y_pred = model.predict_input()
 
 def gender(output):
-    return 'Kadin' if output > 0.5 else "Erkek"
+    return 'Female' if output > 0.5 else "Male"
 
 print('\n')
 for i, output in enumerate(y_pred):

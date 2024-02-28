@@ -1,24 +1,36 @@
 import numpy as np 
 
-def activation_functions(activation, x):
-    """
-    Activation functions for the model.
+class ActivationFunctions:
+    def __init__(self):
+        self.activation_functions_dict = {}
+        
+    def add_activation_function(self, function_name, function_formula):
 
-    Args:
-        - activation (str): The activation function to use.
-        - x (np.array): The input data.
-    
-    Returns:
-        - np.array: The output data after applying the activation function.
-    """
-    if activation == 'softmax':
-        return np.exp(x) / np.sum(np.exp(x), axis=0)
+        self.activation_functions_dict[function_name] = function_formula
 
-    elif activation == 'sigmoid':
-        return 1 / (1 + np.exp(-x))
+    def activation_functions(self, activation, x):
+        """
+        Activation functions for the model.
 
-    else:
-        raise ValueError(f"{activation_func} is not a valid activation function!!!")
+        Args:
+            - activation (str): The activation function to use.
+            - x (np.array): The input data.
+        
+        Returns:
+            - np.array: The output data after applying the activation function.
+        """
+        
+        self.activation_functions_dict = {
+                "sigmoid" : 1 / (1 + np.exp(-x)), 
+                "softmax" : np.exp(x) / np.sum(np.exp(x), axis=0),
+                'tanh' : (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x)),
+                # 'relu' : max(0, x)
+            }
+        try:
+            return self.activation_functions_dict[activation]
+
+        except:
+            raise ValueError(f"{activation} is not a valid activation function!!!")
 
 
 class Layers:
@@ -82,10 +94,12 @@ class NLayer:
         - weights are initialized with random values between -1 and 1.and
         - bias is initialized with random value between -1 and 1. 
     """
-    def __init__(self, shapes, activation, use_bias=True):
+    def __init__(self, shapes, activation, use_bias=True, function_name=None, function_formula=None):
         self.shapes = shapes
         self.activation = activation
         self.use_bias= use_bias
+        self.function_name = function_name
+        self.function_formula = function_formula
 
         self.weights = np.random.uniform(-1, 1, size=self.shapes)
         self.bias = np.random.uniform(-1, 1)
@@ -97,10 +111,12 @@ class NLayer:
         Args:
             - input_data (np.array): The input data to the layer.
         """
+        activation_function = ActivationFunctions()
+        
         self.output = np.dot(input_data, self.weights)
+
         if self.use_bias: 
             self.output += self.bias
 
-        self.output = activation_functions(self.activation, self.output)
-
+        self.output = activation_function.activation_functions(self.activation, self.output)
         return self.output
