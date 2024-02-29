@@ -1,4 +1,8 @@
+import pandas as pd 
 import numpy as np 
+np.random.seed(0)
+
+from sklearn.model_selection import train_test_split
 
 from Nn import Layers
 from Nn import NLayer
@@ -10,7 +14,8 @@ outputs = []
 class DataGenerator:
     def __init__(self, num_row):
         self.num_row = num_row
-        self.features = []
+        self.features = ['height', 'weight', 'eye_color', 'hair_color', 'gender']
+        self.df = pd.DataFrame(columns=self.features)
 
     def add_feature(self, feature):
         self.features.append(feature)
@@ -30,39 +35,43 @@ class DataGenerator:
 
             output = np.random.randint(0, 2)
 
-            if self.features != []:
-                selected_feature = [np.random.choice(feature) for feature in self.features][0]
-                inputs.append([height, weight, eye_color, hair_color, selected_feature])
-                outputs.append(output)
-                
-            else: 
-                inputs.append([height, weight, eye_color, hair_color])
-                outputs.append(output)
-        return np.array(inputs), np.array(outputs)
+            self.df.loc[len(self.df)] = [height, weight, eye_color, hair_color, output]
+            
+        return self.df
 
 data_generator = DataGenerator(5)
-data_generator.add_feature([1, 2, 3, 4, 5, 6, 7])
+# data_generator.add_feature([1, 2, 3, 4, 5, 6, 7])
 
-X_train, y_train = data_generator.generate_data()
+df = data_generator.generate_data()
 
-y_train = y_train.reshape(-1, 1)
+X = df.drop(columns='gender').values
+y = df['gender'].values
  
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
+
 model = Layers()
 
-# model.add(NInput(shapes=((X_train.shape[1], 256))))
+# model.add(NInput(num_neurons=X_train.shape[1]))
 
-model.add(NLayer(num_neurons=X_train.shape[1], output_shape= 256, activation='softmax', use_bias=True))
-model.add(NLayer(num_neurons=256, output_shape= 128, activation='softmax', use_bias=True))
-model.add(NLayer(num_neurons=128, output_shape= 64, activation='softmax', use_bias=True))
-model.add(NLayer(num_neurons=64, output_shape= y_train.shape[1], activation='sigmoid', use_bias=True))
+## Input Layer 
+model.add(NLayer(num_neurons=X_train.shape[1], use_bias=True)) # egitild
 
+## Hidden Layers
+model.add(NLayer(num_neurons=256, activation='softmax', use_bias=True)) 
+model.add(NLayer(num_neurons=128, activation='softmax', use_bias=True)) 
+model.add(NLayer(num_neurons=64, activation='softmax', use_bias=True)) 
+
+## Output Layer
+model.add(NLayer(num_neurons=1, activation='sigmoid', use_bias=False))
+
+## Train model
 model.train_model(x=X_train)
 
-y_pred = model.predict_input()
+y_pred = model.output
 
 def gender(output):
     return 'Female' if output > 0.5 else "Male"
 
 print('\n')
 for i, output in enumerate(y_pred):
-    print(f'Prediction for input {i+1}: {gender(output)}, true value is {"Kadin" if outputs[i] == 1 else "Erkek"}')
+    print(f'Prediction for input {i+1}: {gender(output)}, true value is {"Kadin" if y_pred[i] == 1 else "Erkek"}')

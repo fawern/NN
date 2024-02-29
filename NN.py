@@ -1,11 +1,16 @@
 import numpy as np 
+# np.random.seed(0)
 
 class ActivationFunctions:
     def __init__(self):
-        self.activation_functions_dict = {}
-        
-    def add_activation_function(self, function_name, function_formula):
+        self.activation_functions_dict = {
+            'sigmoid': self.sigmoid,  
+            'softmax': self.softmax,  
+            'tanh': self.tanh,       
+            'relu': self.relu         
+        }
 
+    def add_activation_function(self, function_name, function_formula):
         self.activation_functions_dict[function_name] = function_formula
 
     def activation_functions(self, activation, x):
@@ -19,25 +24,24 @@ class ActivationFunctions:
         Returns:
             - np.array: The output data after applying the activation function.
         """
-
-        try:
-            if activation == 'sigmoid': return 1 / (1 + np.exp(-x))
-            elif activation == 'softmax': return np.exp(x) / np.sum(np.exp(x), axis=0)
-            elif activation == 'tanh': return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
-            elif activation == 'relu': return x if x > 0 else 0
-
-            # self.activation_functions_dict = {
-            #         "sigmoid" : 1 / (1 + np.exp(-x)), 
-            #         "softmax" : np.exp(x) / np.sum(np.exp(x), axis=0),
-            #         'tanh' : (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x)),
-            #         'relu' : x if x > 0 else 0
-            #     }
         
-            # return self.activation_functions_dict[activation]
-
-        except:
+        if activation in self.activation_functions_dict:
+            return self.activation_functions_dict[activation](x)
+        else:
             raise ValueError(f"{activation} is not a valid activation function!!!")
 
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    def softmax(self, x):
+        exp_x = np.exp(x - np.max(x)) 
+        return exp_x / np.sum(exp_x, axis=0)
+
+    def tanh(self, x):
+        return np.tanh(x)
+
+    def relu(self, x):
+        return np.maximum(0, x)
 
 class Layers:
     """
@@ -70,20 +74,43 @@ class Layers:
             - x (np.array): The input data.
             - output_data (np.array): The output data.
         """
-        
+
+        """
+            | Input shape     | Weights Shape | Output Shape    |
+            |=================|===============|=================|
+            | (num_rows, 4)   | (4, 256)      | (num_rows, 256) |
+            | (num_rows, 256) | (256, 128)    | (num_rows, 128) |
+            | (num_rows, 128) | (128, 64)     | (num_rows, 64)  |
+            | (num_rows, 64)  | (64, 1)       | (num_rows, 1)   |
+        """
         ## First Layer
-        self.output = self.layers[0].forward(x)
+        # output_shape = self.layers[1].num_neurons
+        # self.output = self.layers[0].get_weights(output_shape)
 
         print("===============================================================")
-        print(f"({1}/{len(self.layers)}) Layer {1} trained")
+
+        output_shape = self.layers[1].num_neurons
+        activation = self.layers[1].activation
+        
+        self.layers[0].set_weights(output_shape)
+        self.layers[0].set_activation(activation)
+        self.output = self.layers[0].forward(x)
+        print(f"({1}/{len(self.layers)-1}) Layer {1} trained")
+
         print("---------------------------------------------------------------")
 
         ## Other Layers
-        for i in range(1, len(self.layers)): 
+        for i in range(1, len(self.layers)-1): 
+            output_shape = self.layers[i+1].num_neurons
+            activation = self.layers[i+1].activation
+
+            self.layers[i].set_weights(output_shape)
+            self.layers[i].set_activation(activation)
+
             self.output = self.layers[i].forward(self.output)
-            print(f"({i+2}/{len(self.layers)}) Layer {i+2} trained")
+            print(f"({i+1}/{len(self.layers)-1}) Layer {i+1} trained")
             print("---------------------------------------------------------------")
-    
+
     def predict_input(self):
         return self.output
 
@@ -91,8 +118,11 @@ class NInput:
     """"
     # Input Layer.
     """
-    def __init__(self, input_shapes):
-        self.input_shapes = input_shapes
+    def __init__(self, num_neurons):
+        self.num_neurons = num_neurons
+    
+    def set_weights(self, output_shape):
+        self.weights = np.random.uniform(-1, 1, size=(self.num_neurons, output_shape))
 
 
 class NLayer:
@@ -108,16 +138,20 @@ class NLayer:
         - weights are initialized with random values between -1 and 1.and
         - bias is initialized with random value between -1 and 1. 
     """
-    def __init__(self, num_neurons, output_shape, activation, use_bias=True, function_name=None, function_formula=None):
+    def __init__(self, num_neurons, activation=None, use_bias=True, function_name=None, function_formula=None):
         self.num_neurons = num_neurons
-        self.output_shape = output_shape
         self.activation = activation
         self.use_bias= use_bias
         self.function_name = function_name
         self.function_formula = function_formula
 
-        self.weights = np.random.uniform(-1, 1, size=(self.num_neurons, self.output_shape))
         self.bias = np.random.uniform(-1, 1)
+    
+    def set_weights(self, output_shape):
+        self.weights = np.random.uniform(-1, 1, size=(self.num_neurons, output_shape))
+
+    def set_activation(self, activation):
+        self.activation = activation
 
     def forward(self, input_data):
         """
@@ -126,12 +160,17 @@ class NLayer:
         Args:
             - input_data (np.array): The input data to the layer.
         """
-        activation_function = ActivationFunctions()
-        
         self.output = np.dot(input_data, self.weights)
 
         if self.use_bias: 
             self.output += self.bias
-            
-        self.output = activation_function.activation_functions(self.activation, self.output)
-        return self.output
+
+        if self.activation is not None:
+            activation_function = ActivationFunctions()    
+            self.output = activation_function.activation_functions(self.activation, self.output)
+            return self.output
+
+        else:
+            return self.output
+        
+
