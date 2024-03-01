@@ -59,7 +59,7 @@ model.add(NLayer(num_neurons=X_train.shape[1], use_bias=True)) # egitild
 ## Hidden Layers
 model.add(NLayer(num_neurons=256, activation='softmax', use_bias=True)) 
 model.add(NLayer(num_neurons=128, activation='softmax', use_bias=True)) 
-model.add(NLayer(num_neurons=64, activation='softmax', use_bias=True)) 
+model.add(NLayer(num_neurons=64, activation='sigmoid', use_bias=True)) 
 
 ## Output Layer
 model.add(NLayer(num_neurons=1, activation='sigmoid', use_bias=False))
@@ -68,6 +68,8 @@ model.add(NLayer(num_neurons=1, activation='sigmoid', use_bias=False))
 model.train_model(x=X_train)
 
 y_pred = model.output
+
+print(y_pred)
 
 def gender(output):
     return 'Female' if output > 0.5 else "Male"

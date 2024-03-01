@@ -75,39 +75,28 @@ class Layers:
             - output_data (np.array): The output data.
         """
 
-        """
-            | Input shape     | Weights Shape | Output Shape    |
-            |=================|===============|=================|
-            | (num_rows, 4)   | (4, 256)      | (num_rows, 256) |
-            | (num_rows, 256) | (256, 128)    | (num_rows, 128) |
-            | (num_rows, 128) | (128, 64)     | (num_rows, 64)  |
-            | (num_rows, 64)  | (64, 1)       | (num_rows, 1)   |
-        """
         ## First Layer
         # output_shape = self.layers[1].num_neurons
         # self.output = self.layers[0].get_weights(output_shape)
 
         print("===============================================================")
 
-        output_shape = self.layers[1].num_neurons
-        activation = self.layers[1].activation
-        
+        output_shape = self.layers[1].num_neurons        
         self.layers[0].set_weights(output_shape)
-        self.layers[0].set_activation(activation)
+
         self.output = self.layers[0].forward(x)
+
         print(f"({1}/{len(self.layers)-1}) Layer {1} trained")
 
         print("---------------------------------------------------------------")
 
-        ## Other Layers
+        ## Other Layers 1 2 3 4 , len=5
         for i in range(1, len(self.layers)-1): 
             output_shape = self.layers[i+1].num_neurons
-            activation = self.layers[i+1].activation
-
             self.layers[i].set_weights(output_shape)
-            self.layers[i].set_activation(activation)
 
             self.output = self.layers[i].forward(self.output)
+
             print(f"({i+1}/{len(self.layers)-1}) Layer {i+1} trained")
             print("---------------------------------------------------------------")
 
@@ -150,8 +139,8 @@ class NLayer:
     def set_weights(self, output_shape):
         self.weights = np.random.uniform(-1, 1, size=(self.num_neurons, output_shape))
 
-    def set_activation(self, activation):
-        self.activation = activation
+    # def set_activation(self, activation):
+    #     self.activation = activation
 
     def forward(self, input_data):
         """
