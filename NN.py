@@ -1,5 +1,5 @@
 import numpy as np 
-# np.random.seed(0)
+np.random.seed(0)
 
 class ActivationFunctions:
     def __init__(self):
@@ -15,7 +15,7 @@ class ActivationFunctions:
 
     def activation_functions(self, activation, x):
         """
-        Activation functions for the model.
+        # Activation functions for the model.
 
         Args:
             - activation (str): The activation function to use.
@@ -34,11 +34,11 @@ class ActivationFunctions:
         return 1 / (1 + np.exp(-x))
 
     def softmax(self, x):
-        exp_x = np.exp(x - np.max(x)) 
+        exp_x = np.exp(x - np.max(x, axis=0)) 
         return exp_x / np.sum(exp_x, axis=0)
 
     def tanh(self, x):
-        return np.tanh(x)
+        return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
 
     def relu(self, x):
         return np.maximum(0, x)
@@ -59,60 +59,87 @@ class Layers:
 
     def add(self, layer):
         """
-        Add a layer to the model.
+        # Add a layer to the model.
 
         Args:
             - layer (NLayer): The layer to add the model.
         """
         self.layers.append(layer)
 
-    def train_model(self, x, output_data=None):
+    def train_model(self, x, y, iterations=1, learning_rate=0.001):
         """
-        Train the model.
+        # Train the model.
 
         Args:
             - x (np.array): The input data.
             - output_data (np.array): The output data.
         """
 
-        ## First Layer
-        # output_shape = self.layers[1].num_neurons
-        # self.output = self.layers[0].get_weights(output_shape)
+        self.x = x
+        self.y = y
 
-        print("===============================================================")
+        print("=============================== Iteration 1 ===============================")
+        for iter_ in range(iterations):
+            output_shape = self.layers[0].num_neurons        
+            self.layers[1].set_weights(output_shape)
+            
+            self.output = self.layers[1].forward(self.x)
 
-        output_shape = self.layers[1].num_neurons        
-        self.layers[0].set_weights(output_shape)
+            print(f"({1}/{len(self.layers)-1}) Layer {1} trained")
 
-        self.output = self.layers[0].forward(x)
+            for i in range(2, len(self.layers)): 
+                output_shape = self.layers[i-1].num_neurons
+                self.layers[i].set_weights(output_shape)
 
-        print(f"({1}/{len(self.layers)-1}) Layer {1} trained")
+                self.output = self.layers[i].forward(self.output)
 
-        print("---------------------------------------------------------------")
+                print(f"({i}/{len(self.layers)-1}) Layer {i} trained")
+            print(f"=============================== Iteration {iter_ + 2} ===============================")
 
-        ## Other Layers 1 2 3 4 , len=5
-        for i in range(1, len(self.layers)-1): 
-            output_shape = self.layers[i+1].num_neurons
-            self.layers[i].set_weights(output_shape)
+            self.backpropagation(learning_rate)
 
-            self.output = self.layers[i].forward(self.output)
+    def backpropagation(self, learning_rate):
+        """
+        # Backpropagation algorithm to update weights.
 
-            print(f"({i+1}/{len(self.layers)-1}) Layer {i+1} trained")
-            print("---------------------------------------------------------------")
+        Args:
+            - learning_rate (float): The learning rate for updating weights.
+        """
+        output_error = self.output - self.y.reshape(-1, 1)
+        
+        for i in range(len(self.layers) - 1, 0, -1):
+            layer = self.layers[i]
+            prev_layer_output = self.layers[i-1].output if i > 1 else self.x
+
+            grad_weights = np.dot(prev_layer_output.T, output_error * layer.output * (1 - layer.output))
+            
+            layer.weights -= learning_rate * grad_weights
+            
+            if layer.use_bias:
+                grad_bias = np.sum(output_error * layer.output * (1 - layer.output), axis=0)
+                layer.bias -= learning_rate * grad_bias
+                
+            output_error = np.dot(output_error * layer.output * (1 - layer.output), layer.weights.T)
+
+    def evaluate_trained_model(self):
+        predicted_values = [1 if x > 0.5 else 0 for x in self.output]
+        true_values = self.y
+
+        true_predicts = [1 if x == y else 0 for x, y in zip(predicted_values, true_values)]
+
+        accuracy = sum(true_predicts) / len(true_values)
+
+        return accuracy
 
     def predict_input(self):
         return self.output
 
 class NInput:
-    """"
+    """
     # Input Layer.
     """
     def __init__(self, num_neurons):
         self.num_neurons = num_neurons
-    
-    def set_weights(self, output_shape):
-        self.weights = np.random.uniform(-1, 1, size=(self.num_neurons, output_shape))
-
 
 class NLayer:
     """
@@ -137,14 +164,11 @@ class NLayer:
         self.bias = np.random.uniform(-1, 1)
     
     def set_weights(self, output_shape):
-        self.weights = np.random.uniform(-1, 1, size=(self.num_neurons, output_shape))
-
-    # def set_activation(self, activation):
-    #     self.activation = activation
+        self.weights = np.random.uniform(-1, 1, size=(output_shape, self.num_neurons))
 
     def forward(self, input_data):
         """
-        Feed-Forward for the layer.
+        # Feed-Forward for the layer.
 
         Args:
             - input_data (np.array): The input data to the layer.
@@ -161,5 +185,3 @@ class NLayer:
 
         else:
             return self.output
-        
-
