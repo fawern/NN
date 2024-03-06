@@ -111,15 +111,16 @@ class Layers:
             layer = self.layers[i]
             prev_layer_output = self.layers[i-1].output if i > 1 else self.x
 
-            grad_weights = np.dot(prev_layer_output.T, output_error * layer.output * (1 - layer.output))
+            backpropagated_error = output_error * layer.output * (1 - layer.output)
+            grad_weights = np.dot(prev_layer_output.T, backpropagated_error)
             
             layer.weights -= learning_rate * grad_weights
             
             if layer.use_bias:
-                grad_bias = np.sum(output_error * layer.output * (1 - layer.output), axis=0)
+                grad_bias = np.sum(backpropagated_error, axis=0)
                 layer.bias -= learning_rate * grad_bias
                 
-            output_error = np.dot(output_error * layer.output * (1 - layer.output), layer.weights.T)
+            output_error = np.dot(backpropagated_error, layer.weights.T)
 
     def evaluate_trained_model(self):
         predicted_values = [1 if x > 0.5 else 0 for x in self.output]
