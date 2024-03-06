@@ -50,7 +50,7 @@ class DataGenerator:
         y_train, y_test = y[train_indices], y[test_indices]
         return X_train, X_test, y_train, y_test
 
-data_generator = DataGenerator(60)
+data_generator = DataGenerator(1000)
 # data_generator.add_feature([1, 2, 3, 4, 5, 6, 7])
 df = data_generator.generate_data()
 
@@ -89,7 +89,7 @@ class LayersWrap(Layers):
         self.add(NLayer(num_neurons=1, activation=self.ol_activation, use_bias=False))
 
         ## Train model
-        self.train_model(x=X_train, y=y_train, iterations=2)
+        self.train_model(x=X_train, y=y_train, iterations=6)
 
     def get_accuracy(self):
         return self.output
@@ -98,14 +98,4 @@ model = LayersWrap(hl_activation='softmax', ol_activation='sigmoid')
 
 y_output = model.get_accuracy()
 
-print('\n')
 print(f'Accuracy of model : {model.evaluate_trained_model()}')
-
-def gender(output):
-    return 'Female' if output > 0.5 else "Male"
-
-print('\n')
-for i, output in enumerate(y_output):
-    predicted_gender = gender(output)
-    true_gender = "Female" if y_train[i] == 1 else "Male"
-    print(f'Prediction for input {i+1}: {predicted_gender}, true value is {true_gender}')
