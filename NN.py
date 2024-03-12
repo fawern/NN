@@ -67,7 +67,12 @@ class Layers:
         self.layers.append(layer)
         self.losses = []
 
-    def train_model(self, x, y, iterations=1, learning_rate=0.1):
+        if len(self.layers) >= 2:
+            for i in range(len(self.layers)-1):
+                output_shape = self.layers[i].num_neurons
+                self.layers[i+1].set_weights(output_shape)
+            
+    def train_model(self, x, y, iterations=1, learning_rate=0.001):
         """
         # Train the model.
 
@@ -75,39 +80,21 @@ class Layers:
             - x (np.array): The input data.
             - output_data (np.array): The output data.
         """
-
+        self.learning_rate = learning_rate
         self.x = x
         self.y = y
-
-        # for iter_ in range(iterations):
-        #     output_shape = self.layers[0].num_neurons        
-        #     self.layers[1].set_weights(output_shape)
-            
-        #     self.output = self.layers[1].forward(self.x)
-
-        #     for i in range(2, len(self.layers)): 
-        #         output_shape = self.layers[i-1].num_neurons
-        #         self.layers[i].set_weights(output_shape)
-    
-        #         self.output = self.layers[i].forward(self.output)
         
-        output_shape = self.layers[0].num_neurons
-        self.layers[1].set_weights(output_shape)
-
-        output_shape = self.layers[1].num_neurons
-        self.layers[2].set_weights(output_shape)
-
-        output_shape = self.layers[2].num_neurons
-        self.layers[3].set_weights(output_shape)
-
+        # for i in range(len(self.layers)-1):
+        #     output_shape = self.layers[i].num_neurons
+        #     self.layers[i+1].set_weights(output_shape)
+        
         for iter_ in range(iterations):
-            self.output = self.layers[1].forward(self.x)
-            self.output = self.layers[2].forward(self.output)
-            self.output = self.layers[3].forward(self.output)
+            self.output = self.x
+            for i in range(1, len(self.layers)):
+                self.output = self.layers[i].forward(self.output)
 
             loss = np.mean(np.square(self.y-self.output))
             self.losses.append(loss)
-
             self.backpropagation(learning_rate)
 
     def backpropagation(self, learning_rate):
@@ -117,22 +104,78 @@ class Layers:
         Args:
             - learning_rate (float): The learning rate for updating weights.
         """
+        
         layer1_output = self.layers[1].output
         layer2_output = self.layers[2].output
-        output = self.output
+        layer3_output = self.layers[3].output
+        layer4_output = self.layers[4].output
 
-        error_hidden_layer_3 = self.y - output
-        delta_output_layer = error_hidden_layer_3 * output * (1 - output)
-        
-        error_hidden_layer_2 = delta_output_layer.dot(self.layers[3].weights.T)
+        # Output Layer
+        error_output_layer = self.y - self.output
+        delta_output_layer = error_output_layer * layer4_output * (1 - layer4_output)
+        gradyan_weights_output = layer3_output.T.dot(delta_output_layer)    
+        self.layers[4].weights += gradyan_weights_output * self.learning_rate
+
+        # Hidden Layer
+        error_hidden_layer_3 = delta_output_layer.dot(self.layers[4].weights.T)
+        delta_hidden_layer_3 = error_hidden_layer_3 * layer3_output * (1 - layer3_output)
+        gradyan_weights_3 = layer2_output.T.dot(delta_hidden_layer_3)
+        self.layers[3].weights += gradyan_weights_3 * self.learning_rate
+
+        error_hidden_layer_2 = delta_hidden_layer_3.dot(self.layers[3].weights.T)
         delta_hidden_layer_2 = error_hidden_layer_2 * layer2_output * (1 - layer2_output)
+        gradyan_weights_2 = layer1_output.T.dot(delta_hidden_layer_2)
+        self.layers[2].weights += gradyan_weights_2 * self.learning_rate
 
-        error_hidden_layer_1 = delta_hidden_layer_2.dot(self.layers[2].weights.T)
-        delta_hidden_layer_1 = error_hidden_layer_1 * layer1_output * (1 - layer1_output)
+        # Input Layer
+        erro_input_layer = delta_hidden_layer_2.dot(self.layers[2].weights.T)
+        delta_input_layer = erro_input_layer * layer1_output * (1 - layer1_output)
+        gradyan_weights_input = self.x.T.dot(delta_input_layer)
+        self.layers[1].weights += gradyan_weights_input * self.learning_rate
+
+
+
+        # error_output_layer = self.y - self.output
+        # delta_output_layer = error_output_layer * layer3_output * (1 - layer3_output)
+        # gradyan_weights_output = layer2_output.T.dot(delta_output_layer)
+        # self.layers[3].weights += gradyan_weights_output * self.learning_rate
+
+        # error_hidden_layer_2 = delta_output_layer.dot(self.layers[3].weights.T)
+        # delta_hidden_layer_2 = error_hidden_layer_2 * layer2_output * (1 - layer2_output)
+        # gradyan_weights_2 = layer1_output.T.dot(delta_hidden_layer_2)
+
+        # self.layers[2].weights += gradyan_weights_2 * self.learning_rate
+
+        # error_hidden_layer_1 = delta_hidden_layer_2.dot(self.layers[2].weights.T)
+        # delta_hidden_layer_1 = error_hidden_layer_1 * layer1_output * (1 - layer1_output)
+        # gradyan_weights_1 = self.x.T.dot(delta_hidden_layer_1)
+
+        # self.layers[1].weights += gradyan_weights_1 * self.learning_rate
+
+        # error_hidden_layer_4 = self.y - layer4_output
+        # print('self.y.shape', self.y.shape)
+        # print('layer4_output.shape', layer4_output.shape)
+        # print('error_hidden_layer_4.shape', error_hidden_layer_4.shape)
+        # delta_output_layer_4 = error_hidden_layer_4 * layer4_output * (1 - layer4_output)
+        # print("delta_output_layer_4.shape", delta_output_layer_4.shape)
+        # gradyan_weights_4 = layer3_output.T.dot(delta_output_layer_4)
+        # print("gradyan_weights_4.shape", gradyan_weights_4.shape)
+        # self.layers[4].weights += gradyan_weights_4 * self.learning_rate
+
+        # error_hidden_layer_3 = delta_output_layer_4.dot(self.layers[4].weights.T)
+        # delta_hidden_layer_3 = error_hidden_layer_3 * layer3_output * (1 - layer3_output)
+        # gradyan_weights_3 = layer2_output.T.dot(delta_hidden_layer_3)
+        # self.layers[3].weights += gradyan_weights_3 * self.learning_rate
+
+        # error_hidden_layer_2 = delta_hidden_layer_3.dot(self.layers[3].weights.T)
+        # delta_hidden_layer_2 = error_hidden_layer_2 * layer2_output * (1 - layer2_output)
+        # gradyan_weights_2 = layer1_output.T.dot(delta_hidden_layer_2)
+        # self.layers[2].weights += gradyan_weights_2 * self.learning_rate
         
-        self.layers[3].weights += layer2_output.T.dot(delta_output_layer) * learning_rate
-        self.layers[2].weights += layer1_output.T.dot(delta_hidden_layer_2) * learning_rate
-        self.layers[1].weights += self.x.T.dot(delta_hidden_layer_1) * learning_rate
+        # error_hidden_layer_1 = delta_hidden_layer_2.dot(self.layers[2].weights.T)
+        # delta_hidden_layer_1 = error_hidden_layer_1 * layer1_output * (1 - layer1_output)
+        # gradyan_weights_1 = self.x.T.dot(delta_hidden_layer_1)
+        # self.layers[1].weights += gradyan_weights_1 * self.learning_rate
 
     # def evaluate_trained_model(self):
     #     predicted_values = [1 if x > 0.5 else 0 for x in self.output]

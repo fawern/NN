@@ -52,12 +52,15 @@ class DataGenerator:
         y_train, y_test = y[train_indices], y[test_indices]
         return X_train, X_test, y_train, y_test
 
-data_generator = DataGenerator(1000)
-# data_generator.add_feature([1, 2, 3, 4, 5, 6, 7])
-df = data_generator.generate_data()
+# data_generator = DataGenerator(1000)
+# # data_generator.add_feature([1, 2, 3, 4, 5, 6, 7])
+# df = data_generator.generate_data()
 
-X = df.drop(columns='gender').values
-y = df['gender'].values.reshape(-1, 1)
+# X = df.drop(columns='gender').values
+# y = df['gender'].values.reshape(-1, 1)
+
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1], [1, 1], [1, 1], [0, 0], [0, 1], [1, 0], [1, 1], [1, 1], [1, 1]])
+y = np.array([[0], [1], [1], [0], [0], [0], [0], [1], [1], [0], [0], [0]])
 
 class LayersWrap(Layers):
     '''
@@ -82,26 +85,25 @@ class LayersWrap(Layers):
         self.add(NInput(num_neurons=self.input_data.shape[1]))
 
         ## Hidden Layers
-        self.add(NLayer(num_neurons=128, activation=self.hl_activation, use_bias=True)) 
-        self.add(NLayer(num_neurons=64, activation=self.hl_activation, use_bias=True)) 
+        self.add(NLayer(num_neurons=32, activation=self.hl_activation, use_bias=True))
+        self.add(NLayer(num_neurons=16, activation=self.hl_activation, use_bias=True))
         self.add(NLayer(num_neurons=4, activation=self.hl_activation, use_bias=True)) 
 
         ## Output Layer
         self.add(NLayer(num_neurons=output_data.shape[1], activation=self.ol_activation, use_bias=False))
 
-        ## Train model
-    
     def fit_model(self, learning_rate=0.1, iterations=1000000):
-        self.train_model(x=self.input_data, y=self.output_data, iterations=iterations)
+        self.train_model(x=self.input_data, y=self.output_data, iterations=iterations, learning_rate=learning_rate)
 
     def get_accuracy(self):
         return self.output
 
 model = LayersWrap(
     input_data=X, output_data=y, 
-    hl_activation='softmax', ol_activation='sigmoid', 
+    hl_activation='sigmoid', ol_activation='sigmoid', 
 )
-model.fit_model(learning_rate=0.001, iterations=100)
+
+model.fit_model(learning_rate=0.1, iterations=10000)
 
 losses = model.losses
 
