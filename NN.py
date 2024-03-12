@@ -65,8 +65,9 @@ class Layers:
             - layer (NLayer): The layer to add the model.
         """
         self.layers.append(layer)
+        self.losses = []
 
-    def train_model(self, x, y, iterations=1, learning_rate=0.001):
+    def train_model(self, x, y, iterations=1, learning_rate=0.1):
         """
         # Train the model.
 
@@ -78,23 +79,34 @@ class Layers:
         self.x = x
         self.y = y
 
-        print("=============================== Iteration 1 ===============================")
-        for iter_ in range(iterations):
-            output_shape = self.layers[0].num_neurons        
-            self.layers[1].set_weights(output_shape)
+        # for iter_ in range(iterations):
+        #     output_shape = self.layers[0].num_neurons        
+        #     self.layers[1].set_weights(output_shape)
             
+        #     self.output = self.layers[1].forward(self.x)
+
+        #     for i in range(2, len(self.layers)): 
+        #         output_shape = self.layers[i-1].num_neurons
+        #         self.layers[i].set_weights(output_shape)
+    
+        #         self.output = self.layers[i].forward(self.output)
+        
+        output_shape = self.layers[0].num_neurons
+        self.layers[1].set_weights(output_shape)
+
+        output_shape = self.layers[1].num_neurons
+        self.layers[2].set_weights(output_shape)
+
+        output_shape = self.layers[2].num_neurons
+        self.layers[3].set_weights(output_shape)
+
+        for iter_ in range(iterations):
             self.output = self.layers[1].forward(self.x)
+            self.output = self.layers[2].forward(self.output)
+            self.output = self.layers[3].forward(self.output)
 
-            print(f"({1}/{len(self.layers)-1}) Layer {1} trained")
-
-            for i in range(2, len(self.layers)): 
-                output_shape = self.layers[i-1].num_neurons
-                self.layers[i].set_weights(output_shape)
-
-                self.output = self.layers[i].forward(self.output)
-
-                print(f"({i}/{len(self.layers)-1}) Layer {i} trained")
-            print(f"=============================== Iteration {iter_ + 2} ===============================")
+            loss = np.mean(np.square(self.y-self.output))
+            self.losses.append(loss)
 
             self.backpropagation(learning_rate)
 
@@ -105,32 +117,32 @@ class Layers:
         Args:
             - learning_rate (float): The learning rate for updating weights.
         """
-        output_error = self.output - self.y.reshape(-1, 1)
+        layer1_output = self.layers[1].output
+        layer2_output = self.layers[2].output
+        output = self.output
+
+        error_hidden_layer_3 = self.y - output
+        delta_output_layer = error_hidden_layer_3 * output * (1 - output)
         
-        for i in range(len(self.layers) - 1, 0, -1):
-            layer = self.layers[i]
-            prev_layer_output = self.layers[i-1].output if i > 1 else self.x
+        error_hidden_layer_2 = delta_output_layer.dot(self.layers[3].weights.T)
+        delta_hidden_layer_2 = error_hidden_layer_2 * layer2_output * (1 - layer2_output)
 
-            backpropagated_error = output_error * layer.output * (1 - layer.output)
-            grad_weights = np.dot(prev_layer_output.T, backpropagated_error)
-            
-            layer.weights -= learning_rate * grad_weights
-            
-            if layer.use_bias:
-                grad_bias = np.sum(backpropagated_error, axis=0)
-                layer.bias -= learning_rate * grad_bias
-                
-            output_error = np.dot(backpropagated_error, layer.weights.T)
+        error_hidden_layer_1 = delta_hidden_layer_2.dot(self.layers[2].weights.T)
+        delta_hidden_layer_1 = error_hidden_layer_1 * layer1_output * (1 - layer1_output)
+        
+        self.layers[3].weights += layer2_output.T.dot(delta_output_layer) * learning_rate
+        self.layers[2].weights += layer1_output.T.dot(delta_hidden_layer_2) * learning_rate
+        self.layers[1].weights += self.x.T.dot(delta_hidden_layer_1) * learning_rate
 
-    def evaluate_trained_model(self):
-        predicted_values = [1 if x > 0.5 else 0 for x in self.output]
-        true_values = self.y
+    # def evaluate_trained_model(self):
+    #     predicted_values = [1 if x > 0.5 else 0 for x in self.output]
+    #     true_values = self.y
 
-        true_predicts = [1 if x == y else 0 for x, y in zip(predicted_values, true_values)]
+    #     true_predicts = [1 if x == y else 0 for x, y in zip(predicted_values, true_values)]
 
-        accuracy = sum(true_predicts) / len(true_values)
+    #     accuracy = sum(true_predicts) / len(true_values)
 
-        return accuracy
+    #     return accuracy
 
     def predict_input(self):
         return self.output
@@ -164,8 +176,40 @@ class NLayer:
 
         self.bias = np.random.uniform(-1, 1)
     
-    def set_weights(self, output_shape):
-        self.weights = np.random.uniform(-1, 1, size=(output_shape, self.num_neurons))
+    def set_weights(self, output_shape=None, new_weights=None):
+        """
+        # Set the weights for the layer. 
+
+        Args:
+            - output_shape (int): The output shape of the layer.
+            - new_weights (np.array): The new weights to set for the layer.
+
+        Implementation:
+            - If both output_shape and new_weights are None, then an error is raised.
+            - If output_shape is not None, then the weights are initialized with random values between -1 and 1.
+            - If new_weights is not None, then the weights are set to the new_weights
+        """
+
+        if output_shape is None and new_weights is None:
+            raise ValueError("Both output_shape and new_weights cannot be None!!!")
+
+        elif output_shape is not None:
+            self.weights = np.random.uniform(-1, 1, size=(output_shape, self.num_neurons))
+
+        elif new_weights is not None:
+            self.weights = new_weights
+
+        elif output_shape is not None and new_weights is not None:
+            raise ValueError("One of output_shape and new_weights must be None!!!")
+
+    def get_weights(self):
+        '''
+        # Get the weights of the layer.
+
+        Returns:
+            - np.array: The weights of the layer.
+        '''
+        return self.weights
 
     def forward(self, input_data):
         """
@@ -174,7 +218,7 @@ class NLayer:
         Args:
             - input_data (np.array): The input data to the layer.
         """
-        self.output = np.dot(input_data, self.weights)
+        self.output = np.dot(input_data, self.get_weights())
 
         if self.use_bias: 
             self.output += self.bias
