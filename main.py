@@ -52,15 +52,12 @@ class DataGenerator:
         y_train, y_test = y[train_indices], y[test_indices]
         return X_train, X_test, y_train, y_test
 
-# data_generator = DataGenerator(1000)
-# # data_generator.add_feature([1, 2, 3, 4, 5, 6, 7])
-# df = data_generator.generate_data()
+data_generator = DataGenerator(1000)
+# data_generator.add_feature([1, 2, 3, 4, 5, 6, 7])
+df = data_generator.generate_data()
 
-# X = df.drop(columns='gender').values
-# y = df['gender'].values
-
-X = np.array([[0, 0], [0, 1], [1, 0], [1, 1], [1, 1], [1, 1], [0, 0], [0, 1], [1, 0], [1, 1], [1, 1], [1, 1]])
-y = np.array([[0], [1], [1], [0], [0], [0], [0], [1], [1], [0], [0], [0]])
+X = df.drop(columns='gender').values
+y = df['gender'].values.reshape(-1, 1)
 
 class LayersWrap(Layers):
     '''
@@ -104,7 +101,7 @@ model = LayersWrap(
     input_data=X, output_data=y, 
     hl_activation='softmax', ol_activation='sigmoid', 
 )
-model.fit_model(learning_rate=0.001, iterations=1000)
+model.fit_model(learning_rate=0.001, iterations=100)
 
 losses = model.losses
 
