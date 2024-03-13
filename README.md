@@ -36,8 +36,9 @@ Output:
 
 ```python
 model.show_loss_graph()
-![loss_plot](./loss_output.png)
 ```
+
+![loss_plot](./loss_output.png)
 
 ### Information about the classes
 
