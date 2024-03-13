@@ -1,13 +1,23 @@
 import numpy as np 
 np.random.seed(0)
 
+from sklearn.metrics import confusion_matrix
+
 class ActivationFunctions:
     def __init__(self):
         self.activation_functions_dict = {
             'sigmoid': self.sigmoid,  
+            'sigmoid_derivative': self.sigmoid_derivative,
             'softmax': self.softmax,  
+            'softmax_derivative': self.softmax_derivative,
             'tanh': self.tanh,       
-            'relu': self.relu         
+            'tanh_derivative': self.tanh_derivative,
+            'relu': self.relu,
+            'relu_derivative': self.relu_derivative,
+            'linear': self.linear,
+            'linear_derivative': self.linear_derivative,
+            'leaky_relu': self.leaky_relu,
+            'leaky_relu_derivative': self.leaky_relu_derivative       
         }
 
     def add_activation_function(self, function_name, function_formula):
@@ -30,18 +40,23 @@ class ActivationFunctions:
         else:
             raise ValueError(f"{activation} is not a valid activation function!!!")
 
-    def sigmoid(self, x):
-        return 1 / (1 + np.exp(-x))
+    def sigmoid(self, x): return 1 / (1 + np.exp(-x))
+    def sigmoid_derivative(self, x): return x * (1 - x)
 
-    def softmax(self, x):
-        exp_x = np.exp(x - np.max(x, axis=0)) 
-        return exp_x / np.sum(exp_x, axis=0)
+    def softmax(self, x): return np.exp(x - np.max(x, axis=0))  / np.sum(np.exp(x - np.max(x, axis=0)) , axis=0)
+    def softmax_derivative(self, x): return x * (1 - x)
 
-    def tanh(self, x):
-        return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
+    def tanh(self, x): return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
+    def tanh_derivative(self, x): return 1 - np.power(x, 2)
 
-    def relu(self, x):
-        return np.maximum(0, x)
+    def relu(self, x): return np.maximum(0, x)
+    def relu_derivative(self, x): return np.where(x <= 0, 0, 1)
+
+    def linear(self, x): return x 
+    def linear_derivative(self, x): return 1 
+    
+    def leaky_relu(self, x): return np.where(x > 0, x, x * 0.01) 
+    def leaky_relu_derivative(self, x): return np.where(x > 0, 1, 0.01)
 
 class Layers:
     """
@@ -114,9 +129,15 @@ class Layers:
         error_output_layer = self.y - self.output
         delta_output_layer = error_output_layer * layer4_output * (1 - layer4_output)
         gradyan_weights_output = layer3_output.T.dot(delta_output_layer)    
-        self.layers[4].weights += gradyan_weights_output * self.learning_rate
+        self.layers[-1].weights += gradyan_weights_output * self.learning_rate
 
         # Hidden Layer
+        # for i in range(len(self.layers)-2, 2, -1):
+        #     error_hidden_layer = delta_output_layer.dot(self.layers[i+1].weights.T)
+        #     delta_hidden_layer = error_hidden_layer * self.layers[i].output * (1 - self.layers[i].output)
+        #     gradyan_weights_output = self.layers[i-1].output.T.dot(delta_hidden_layer)
+        #     self.layers[i].weights += gradyan_weights_output * self.learning_rate
+
         error_hidden_layer_3 = delta_output_layer.dot(self.layers[4].weights.T)
         delta_hidden_layer_3 = error_hidden_layer_3 * layer3_output * (1 - layer3_output)
         gradyan_weights_3 = layer2_output.T.dot(delta_hidden_layer_3)
@@ -133,59 +154,15 @@ class Layers:
         gradyan_weights_input = self.x.T.dot(delta_input_layer)
         self.layers[1].weights += gradyan_weights_input * self.learning_rate
 
+    def evaluate_trained_model(self):
+        predicted_values = [1 if x > 0.5 else 0 for x in self.output]
+        true_values = self.y
 
+        true_predicts = [1 if x == y else 0 for x, y in zip(predicted_values, true_values)]
 
-        # error_output_layer = self.y - self.output
-        # delta_output_layer = error_output_layer * layer3_output * (1 - layer3_output)
-        # gradyan_weights_output = layer2_output.T.dot(delta_output_layer)
-        # self.layers[3].weights += gradyan_weights_output * self.learning_rate
+        accuracy = sum(true_predicts) / len(true_values)
 
-        # error_hidden_layer_2 = delta_output_layer.dot(self.layers[3].weights.T)
-        # delta_hidden_layer_2 = error_hidden_layer_2 * layer2_output * (1 - layer2_output)
-        # gradyan_weights_2 = layer1_output.T.dot(delta_hidden_layer_2)
-
-        # self.layers[2].weights += gradyan_weights_2 * self.learning_rate
-
-        # error_hidden_layer_1 = delta_hidden_layer_2.dot(self.layers[2].weights.T)
-        # delta_hidden_layer_1 = error_hidden_layer_1 * layer1_output * (1 - layer1_output)
-        # gradyan_weights_1 = self.x.T.dot(delta_hidden_layer_1)
-
-        # self.layers[1].weights += gradyan_weights_1 * self.learning_rate
-
-        # error_hidden_layer_4 = self.y - layer4_output
-        # print('self.y.shape', self.y.shape)
-        # print('layer4_output.shape', layer4_output.shape)
-        # print('error_hidden_layer_4.shape', error_hidden_layer_4.shape)
-        # delta_output_layer_4 = error_hidden_layer_4 * layer4_output * (1 - layer4_output)
-        # print("delta_output_layer_4.shape", delta_output_layer_4.shape)
-        # gradyan_weights_4 = layer3_output.T.dot(delta_output_layer_4)
-        # print("gradyan_weights_4.shape", gradyan_weights_4.shape)
-        # self.layers[4].weights += gradyan_weights_4 * self.learning_rate
-
-        # error_hidden_layer_3 = delta_output_layer_4.dot(self.layers[4].weights.T)
-        # delta_hidden_layer_3 = error_hidden_layer_3 * layer3_output * (1 - layer3_output)
-        # gradyan_weights_3 = layer2_output.T.dot(delta_hidden_layer_3)
-        # self.layers[3].weights += gradyan_weights_3 * self.learning_rate
-
-        # error_hidden_layer_2 = delta_hidden_layer_3.dot(self.layers[3].weights.T)
-        # delta_hidden_layer_2 = error_hidden_layer_2 * layer2_output * (1 - layer2_output)
-        # gradyan_weights_2 = layer1_output.T.dot(delta_hidden_layer_2)
-        # self.layers[2].weights += gradyan_weights_2 * self.learning_rate
-        
-        # error_hidden_layer_1 = delta_hidden_layer_2.dot(self.layers[2].weights.T)
-        # delta_hidden_layer_1 = error_hidden_layer_1 * layer1_output * (1 - layer1_output)
-        # gradyan_weights_1 = self.x.T.dot(delta_hidden_layer_1)
-        # self.layers[1].weights += gradyan_weights_1 * self.learning_rate
-
-    # def evaluate_trained_model(self):
-    #     predicted_values = [1 if x > 0.5 else 0 for x in self.output]
-    #     true_values = self.y
-
-    #     true_predicts = [1 if x == y else 0 for x, y in zip(predicted_values, true_values)]
-
-    #     accuracy = sum(true_predicts) / len(true_values)
-
-    #     return accuracy
+        return accuracy, confusion_matrix(true_values, predicted_values)
 
     def predict_input(self):
         return self.output
@@ -210,7 +187,7 @@ class NLayer:
         - weights are initialized with random values between -1 and 1.and
         - bias is initialized with random value between -1 and 1. 
     """
-    def __init__(self, num_neurons, activation=None, use_bias=True, function_name=None, function_formula=None):
+    def __init__(self, num_neurons, activation='linear', use_bias=True, function_name=None, function_formula=None):
         self.num_neurons = num_neurons
         self.activation = activation
         self.use_bias= use_bias
@@ -253,6 +230,24 @@ class NLayer:
             - np.array: The weights of the layer.
         '''
         return self.weights
+    
+    def set_activation(self, activation):
+        """
+        # Set the activation function for the layer. 
+
+        Args:
+            - activation (str): The activation function to use.
+        """
+        self.activation = activation
+    
+    def get_activation(self):
+        """
+        # Get the activation function of the layer. 
+
+        Returns:
+            - str: The activation function of the layer.
+        """
+        return self.activation
 
     def forward(self, input_data):
         """

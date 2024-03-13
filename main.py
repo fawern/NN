@@ -62,6 +62,14 @@ class DataGenerator:
 X = np.array([[0, 0], [0, 1], [1, 0], [1, 1], [1, 1], [1, 1], [0, 0], [0, 1], [1, 0], [1, 1], [1, 1], [1, 1]])
 y = np.array([[0], [1], [1], [0], [0], [0], [0], [1], [1], [0], [0], [0]])
 
+# df = pd.read_csv("./gender_classification_v7.csv")
+
+# # mapping gender to 0 and 1
+# df['gender'] = df['gender'].map({"Male" : 0 , "Female" : 1})
+
+# X = df.drop(columns='gender').values
+# y = df['gender'].values.reshape(-1, 1)
+
 class LayersWrap(Layers):
     '''
     LayersWrap class is a wrapper class for the Layers class.
@@ -100,11 +108,12 @@ class LayersWrap(Layers):
 
 model = LayersWrap(
     input_data=X, output_data=y, 
-    hl_activation='sigmoid', ol_activation='sigmoid', 
+    hl_activation='softmax', ol_activation='sigmoid', 
 )
 
-model.fit_model(learning_rate=0.1, iterations=10000)
+model.fit_model(learning_rate=0.001, iterations=1000)
 
+print(model.evaluate_trained_model())
 losses = model.losses
 
 plt.figure(figsize=(5, 3))
