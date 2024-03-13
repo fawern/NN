@@ -22,8 +22,13 @@ model.add(NLayer(1, activation='sigmoid'))
 
 model.fit_model(X, y, epochs=10000, learning_rate=0.1)
 
+```
+
+```python
 print(model.evaluate_trained_model())
 ```
+
+![loss_plot](./loss_output.png)
 
 ### Information about the classes
 
