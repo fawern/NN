@@ -93,9 +93,9 @@ class LayersWrap(Layers):
         self.add(NInput(num_neurons=self.input_data.shape[1]))
 
         ## Hidden Layers
+        self.add(NLayer(num_neurons=64, activation=self.hl_activation, use_bias=True))
         self.add(NLayer(num_neurons=32, activation=self.hl_activation, use_bias=True))
-        self.add(NLayer(num_neurons=16, activation=self.hl_activation, use_bias=True))
-        self.add(NLayer(num_neurons=4, activation=self.hl_activation, use_bias=True)) 
+        self.add(NLayer(num_neurons=8, activation=self.hl_activation, use_bias=True)) 
 
         ## Output Layer
         self.add(NLayer(num_neurons=output_data.shape[1], activation=self.ol_activation, use_bias=False))
@@ -108,14 +108,11 @@ class LayersWrap(Layers):
 
 model = LayersWrap(
     input_data=X, output_data=y, 
-    hl_activation='softmax', ol_activation='sigmoid', 
+    hl_activation='tanh', ol_activation='sigmoid', 
 )
 
-model.fit_model(learning_rate=0.001, iterations=1000)
+model.fit_model(learning_rate=0.01, iterations=100)
 
 print(model.evaluate_trained_model())
-losses = model.losses
 
-plt.figure(figsize=(5, 3))
-plt.title('Losses')
-plt.plot(losses)
+model.show_loss_graph()

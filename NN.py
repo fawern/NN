@@ -1,5 +1,6 @@
 import numpy as np 
 np.random.seed(0)
+import matplotlib.pyplot as plt
 
 from sklearn.metrics import confusion_matrix
 
@@ -21,6 +22,13 @@ class ActivationFunctions:
         }
 
     def add_activation_function(self, function_name, function_formula):
+        """
+        # Add a custom activation function to the activations dictionary.
+
+        Args:
+            - function_name (str): The name of the activation function.
+            - function_formula (formula): The formula of the activation function.
+        """
         self.activation_functions_dict[function_name] = function_formula
 
     def activation_functions(self, activation, x):
@@ -99,10 +107,6 @@ class Layers:
         self.x = x
         self.y = y
         
-        # for i in range(len(self.layers)-1):
-        #     output_shape = self.layers[i].num_neurons
-        #     self.layers[i+1].set_weights(output_shape)
-        
         for iter_ in range(iterations):
             self.output = self.x
             for i in range(1, len(self.layers)):
@@ -119,42 +123,46 @@ class Layers:
         Args:
             - learning_rate (float): The learning rate for updating weights.
         """
-        
-        layer1_output = self.layers[1].output
-        layer2_output = self.layers[2].output
-        layer3_output = self.layers[3].output
-        layer4_output = self.layers[4].output
-
         # Output Layer
         error_output_layer = self.y - self.output
-        delta_output_layer = error_output_layer * layer4_output * (1 - layer4_output)
-        gradyan_weights_output = layer3_output.T.dot(delta_output_layer)    
+        layer_activation_function = self.layers[-1].get_activation() + '_derivative'
+        derivative_output_layer = ActivationFunctions().activation_functions(layer_activation_function, self.output)
+        delta_output_layer = error_output_layer * derivative_output_layer
+        gradyan_weights_output = self.layers[-2].output.T.dot(delta_output_layer)    
         self.layers[-1].weights += gradyan_weights_output * self.learning_rate
-
-        # Hidden Layer
-        # for i in range(len(self.layers)-2, 2, -1):
-        #     error_hidden_layer = delta_output_layer.dot(self.layers[i+1].weights.T)
-        #     delta_hidden_layer = error_hidden_layer * self.layers[i].output * (1 - self.layers[i].output)
-        #     gradyan_weights_output = self.layers[i-1].output.T.dot(delta_hidden_layer)
-        #     self.layers[i].weights += gradyan_weights_output * self.learning_rate
-
-        error_hidden_layer_3 = delta_output_layer.dot(self.layers[4].weights.T)
-        delta_hidden_layer_3 = error_hidden_layer_3 * layer3_output * (1 - layer3_output)
-        gradyan_weights_3 = layer2_output.T.dot(delta_hidden_layer_3)
-        self.layers[3].weights += gradyan_weights_3 * self.learning_rate
-
-        error_hidden_layer_2 = delta_hidden_layer_3.dot(self.layers[3].weights.T)
-        delta_hidden_layer_2 = error_hidden_layer_2 * layer2_output * (1 - layer2_output)
-        gradyan_weights_2 = layer1_output.T.dot(delta_hidden_layer_2)
-        self.layers[2].weights += gradyan_weights_2 * self.learning_rate
+        
+        # If there are at least 1 hidden layer
+        if len(self.layers) >= 3:
+            # Hidden Layers
+            delta_hidden_layer = delta_output_layer
+            for i in range(len(self.layers)-2, 1, -1):
+                error_hidden_layer = delta_hidden_layer.dot(self.layers[i+1].weights.T)
+                layer_activation_function = self.layers[i].get_activation() + '_derivative'
+                derivative_hidden_layer = ActivationFunctions().activation_functions(layer_activation_function, self.layers[i].output)
+                delta_hidden_layer = error_hidden_layer * derivative_hidden_layer
+                gradyan_weights = self.layers[i-1].output.T.dot(delta_hidden_layer)
+                self.layers[i].weights += gradyan_weights * self.learning_rate
+        
+        # If there is no hidden layer
+        else:
+            delta_hidden_layer = delta_output_layer
 
         # Input Layer
-        erro_input_layer = delta_hidden_layer_2.dot(self.layers[2].weights.T)
-        delta_input_layer = erro_input_layer * layer1_output * (1 - layer1_output)
+        erro_input_layer = delta_hidden_layer.dot(self.layers[2].weights.T)
+        layer_activation_function = self.layers[1].get_activation() + '_derivative'
+        derivative_hidden_layer = ActivationFunctions().activation_functions(layer_activation_function, self.layers[1].output)
+        delta_input_layer = erro_input_layer * derivative_hidden_layer
         gradyan_weights_input = self.x.T.dot(delta_input_layer)
         self.layers[1].weights += gradyan_weights_input * self.learning_rate
 
     def evaluate_trained_model(self):
+        '''
+        # Evaluate the trained model.
+
+        Retuns:
+            - float: The accuracy of the model.
+            - np.array: The confusion matrix of the model.
+        '''
         predicted_values = [1 if x > 0.5 else 0 for x in self.output]
         true_values = self.y
 
@@ -163,6 +171,17 @@ class Layers:
         accuracy = sum(true_predicts) / len(true_values)
 
         return accuracy, confusion_matrix(true_values, predicted_values)
+
+    def show_loss_graph(self):
+        """
+        # Show the loss graph of the model.
+        """
+        plt.figure(figsize=(5, 3), facecolor='#032527')
+        plt.title('Losses', color='white')
+        plt.gca().set_facecolor('#032527') 
+        plt.xticks(color='#5ECD5A')
+        plt.yticks(color='#5ECD5A')
+        plt.plot(self.losses)
 
     def predict_input(self):
         return self.output
