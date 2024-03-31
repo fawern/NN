@@ -95,7 +95,7 @@ class Layers:
                 output_shape = self.layers[i].num_neurons
                 self.layers[i+1].set_weights(output_shape)
             
-    def train_model(self, x, y, iterations=1, learning_rate=0.001):
+    def train_model(self, x, y, iterations=1, learning_rate=0.001, batch_size=1):
         """
         # Train the model.
 
@@ -106,17 +106,35 @@ class Layers:
         self.learning_rate = learning_rate
         self.x = x
         self.y = y
-        
+        self.batch_size = batch_size
+
+        # for iter_ in range(iterations):
+        #     indices = np.arange(len(self.x))
+        #     np.random.shuffle(indices)
+        #     self.x = self.x[indices]
+        #     self.y = self.y[indices]
+
+        #     for i in range(0, len(self.x), self.batch_size):
+        #         x_batch = self.x[i:i+self.batch_size]
+        #         y_batch = self.y[i:i+self.batch_size]
+        #         self.output = x_batch
+                
+        #         for layer in self.layers[1:]:
+        #             self.output = layer.forward(self.output)
+
+        #         loss = np.mean(np.square(y_batch-self.output))
+        #         self.losses.append(loss)
+        #         self.backpropagation(x_batch, y_batch)
         for iter_ in range(iterations):
             self.output = self.x
-            for i in range(1, len(self.layers)):
-                self.output = self.layers[i].forward(self.output)
-
+            for layer in self.layers[1:]:
+                self.output = layer.forward(self.output)
+            
             loss = np.mean(np.square(self.y-self.output))
             self.losses.append(loss)
-            self.backpropagation(learning_rate)
+            self.backpropagation(self.x, self.y)
 
-    def backpropagation(self, learning_rate):
+    def backpropagation(self, x_batch, y_batch):
         """
         # Backpropagation algorithm to update weights.
 
@@ -124,7 +142,7 @@ class Layers:
             - learning_rate (float): The learning rate for updating weights.
         """
         # Output Layer
-        error_output_layer = self.y - self.output
+        error_output_layer = y_batch - self.output
         layer_activation_function = self.layers[-1].get_activation() + '_derivative'
         derivative_output_layer = ActivationFunctions().activation_functions(layer_activation_function, self.output)
         delta_output_layer = error_output_layer * derivative_output_layer
@@ -163,6 +181,7 @@ class Layers:
             - float: The accuracy of the model.
             - np.array: The confusion matrix of the model.
         '''
+
         predicted_values = [1 if x > 0.5 else 0 for x in self.output]
         true_values = self.y
 
