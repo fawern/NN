@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import confusion_matrix
 
+import warnings
+
 class ActivationFunctions:
     def __init__(self):
         self.activation_functions_dict = {
@@ -95,7 +97,7 @@ class Layers:
                 output_shape = self.layers[i].num_neurons
                 self.layers[i+1].set_weights(output_shape)
             
-    def train_model(self, x, y, iterations=1, learning_rate=0.001, batch_size=1):
+    def train_model(self, x, y, iterations=1, learning_rate=0.001, batch_size=32):
         """
         # Train the model.
 
@@ -108,31 +110,40 @@ class Layers:
         self.y = y
         self.batch_size = batch_size
 
-        # for iter_ in range(iterations):
-        #     indices = np.arange(len(self.x))
-        #     np.random.shuffle(indices)
-        #     self.x = self.x[indices]
-        #     self.y = self.y[indices]
+        
+        if self.batch_size >= len(self.x):
+            # If batch size is greater than or equal to the length of the input data
+            warnings.warn("Batch size is greater than or equal to the length of the input data!!!")
+            for iter_ in range(iterations):
+                indices = np.arange(len(self.x))
+                np.random.shuffle(indices)
+                self.x = self.x[indices]
+                self.y = self.y[indices]
 
-        #     for i in range(0, len(self.x), self.batch_size):
-        #         x_batch = self.x[i:i+self.batch_size]
-        #         y_batch = self.y[i:i+self.batch_size]
-        #         self.output = x_batch
+                for i in range(0, len(self.x), self.batch_size):
+                    x_batch = self.x[i:i+self.batch_size]
+                    y_batch = self.y[i:i+self.batch_size]
+                    self.output = x_batch
+                    for layer in self.layers[1:]:
+                        self.output = layer.forward(self.output)
+                    
+                    loss = np.mean(np.square(y_batch-self.output))
+                    self.losses.append(loss)
+                    self.backpropagation(x_batch, y_batch)
+        else:
+            # If batch size is less than the length of the input data
+            for iter_ in range(iterations):
+                indices = np.random.permutation(len(self.x))
+                self.x = self.x[indices]
+                self.y = self.y[indices]
+
+                self.output = self.x
+                for layer in self.layers[1:]:
+                    self.output = layer.forward(self.output)
                 
-        #         for layer in self.layers[1:]:
-        #             self.output = layer.forward(self.output)
-
-        #         loss = np.mean(np.square(y_batch-self.output))
-        #         self.losses.append(loss)
-        #         self.backpropagation(x_batch, y_batch)
-        for iter_ in range(iterations):
-            self.output = self.x
-            for layer in self.layers[1:]:
-                self.output = layer.forward(self.output)
-            
-            loss = np.mean(np.square(self.y-self.output))
-            self.losses.append(loss)
-            self.backpropagation(self.x, self.y)
+                loss = np.mean(np.square(self.y-self.output))
+                self.losses.append(loss)
+                self.backpropagation(self.x, self.y)
 
     def backpropagation(self, x_batch, y_batch):
         """
@@ -170,7 +181,7 @@ class Layers:
         layer_activation_function = self.layers[1].get_activation() + '_derivative'
         derivative_hidden_layer = ActivationFunctions().activation_functions(layer_activation_function, self.layers[1].output)
         delta_input_layer = erro_input_layer * derivative_hidden_layer
-        gradyan_weights_input = self.x.T.dot(delta_input_layer)
+        gradyan_weights_input = x_batch.T.dot(delta_input_layer)
         self.layers[1].weights += gradyan_weights_input * self.learning_rate
 
     def evaluate_trained_model(self):

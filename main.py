@@ -100,8 +100,8 @@ class LayersWrap(Layers):
         ## Output Layer
         self.add(NLayer(num_neurons=output_data.shape[1], activation=self.ol_activation, use_bias=False))
 
-    def fit_model(self, learning_rate=0.1, iterations=1000000):
-        self.train_model(x=self.input_data, y=self.output_data, iterations=iterations, learning_rate=learning_rate)
+    def fit_model(self, learning_rate=0.1, iterations=1000000, batch_size=32):
+        self.train_model(x=self.input_data, y=self.output_data, iterations=iterations, learning_rate=learning_rate, batch_size=batch_size)
 
     def get_accuracy(self):
         return self.output
@@ -111,7 +111,7 @@ model = LayersWrap(
     hl_activation='tanh', ol_activation='sigmoid', 
 )
 
-model.fit_model(learning_rate=0.01, iterations=100)
+model.fit_model(learning_rate=0.01, iterations=100, batch_size=11)
 
 print(model.evaluate_trained_model())
 
