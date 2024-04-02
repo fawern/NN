@@ -339,6 +339,24 @@ class ConvNLayer:
         self.kernel_shape = (self.output_size, self.input_size, self.kernel_size, self.kernel_size)
         self.weights = np.random.uniform(-1, 1, size=self.kernel_shape)
     
+    
+    def set_weights(self, new_weights):
+        """
+        # Set the weights for the layer. 
+
+        Args:
+            - new_weights (np.array): The new weights to set for the layer.
+        """
+        pass
+    
+    def get_weights(self):
+        """
+        # Get the weights of the layer.
+
+        Returns:
+            - np.array: The weights of the layer.
+        """
+        return self.weights
 
     def forward(self, input_data):
         """
