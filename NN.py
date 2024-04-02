@@ -96,6 +96,7 @@ class Layers:
             for i in range(len(self.layers)-1):
                 output_shape = self.layers[i].num_neurons
                 self.layers[i+1].set_weights(output_shape)
+
             
     def train_model(self, x, y, iterations=1, learning_rate=0.001, batch_size=32):
         """
@@ -220,8 +221,8 @@ class NInput:
     """
     # Input Layer.
     """
-    def __init__(self, num_neurons):
-        self.num_neurons = num_neurons
+    def __init__(self, input_shape):
+        self.num_neurons = input_shape
 
 class NLayer:
     """
@@ -319,49 +320,19 @@ class NLayer:
             return self.output
 
 
-class ConvNLayer:
+class FlattenLayer:
     """
-    # Convolutional Neural Network Layer.
-
-    Args:
-        - input_size (int): The size of the input data.
-        - output_szize (int): The size of the output data.
-        - kernel_size (int): The size of the kernel.
-        - activation (str): The activation function to use. 
-        - use_bias (bool): Whether to use bias in the layer or not, default is True.
+    # Flatten Layer.
     """
-    def __init__(self, input_size, output_size, kernel_size, activation='linear', use_bias=True):
-        self.input_size = input_size
-        self.output_size = output_size
-        self.kernel_size = kernel_size
-        self.activation = activation
-        self.use_bias = use_bias
-        self.kernel_shape = (self.output_size, self.input_size, self.kernel_size, self.kernel_size)
-        self.weights = np.random.uniform(-1, 1, size=self.kernel_shape)
-    
-    
-    def set_weights(self, new_weights):
-        """
-        # Set the weights for the layer. 
-
-        Args:
-            - new_weights (np.array): The new weights to set for the layer.
-        """
+    def __init__(self):
         pass
-    
-    def get_weights(self):
-        """
-        # Get the weights of the layer.
-
-        Returns:
-            - np.array: The weights of the layer.
-        """
-        return self.weights
 
     def forward(self, input_data):
         """
-        # Feed-Forward for the Layer.
-        """
-        pass
+        # Feed-Forward for the layer.
 
-    
+        Args:
+            - input_data (np.array): The input data to the layer.
+        """
+        self.output = input_data.flatten()
+        return self.output
