@@ -104,6 +104,11 @@ class Layers:
 
         Args:
             - x (np.array): The input data.
+            - y (np.array): The output data.
+            - loss_type (str): The loss type to use for the model. 
+                * 'categorical' for categorical crossentropy loss.
+                * 'mse' for mean squared error loss.
+                * 'mae' for mean absolute error loss.
             - output_data (np.array): The output data.
         """
         self.learning_rate = learning_rate
@@ -117,6 +122,7 @@ class Layers:
             # If batch size is greater than or equal to the length of the input data
             warnings.warn("Batch size is greater than or equal to the length of the input data!!!")
             for iter_ in range(iterations):
+                print(f"Iteration: {iter_+1}")
                 indices = np.arange(len(self.x))
                 np.random.shuffle(indices)
                 self.x = self.x[indices]
@@ -135,6 +141,7 @@ class Layers:
         else:
             # If batch size is less than the length of the input data
             for iter_ in range(iterations):
+                print(f"Iteration: {iter_+1}")
                 indices = np.random.permutation(len(self.x))
                 self.x = self.x[indices]
                 self.y = self.y[indices]

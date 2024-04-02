@@ -1,16 +1,24 @@
 import numpy as np 
 import pandas as pd
 
+import matplotlib.pyplot as plt
+
 np.random.seed(0)
 
 from mlp_wrapper import LayersWrap
 
-X = np.linspace(0, 10, 100).reshape(-1, 1)
-y = np.sin(X).reshape(-1, 1)
+df = pd.read_csv("./data/train.csv")
+df = df.dropna()
 
-model = LayersWrap(input_data=X, output_data=y, hl_activation='tanh', ol_activation='linear', )
+X = df['x'].values.reshape(-1, 1)
+y = df['y'].values.reshape(-1, 1)
 
-model.fit_model(loss_type='mse', learning_rate=0.0001, iterations=1000, batch_size=1)
+plt.scatter(X, y)
+plt.show()
+
+model = LayersWrap(input_data=X, output_data=y, hl_activation='softmax', ol_activation='linear', )
+
+model.fit_model(loss_type='mae', learning_rate=0.01, iterations=2000, batch_size=1)
 
 print(model.evaluate_trained_model())
 
