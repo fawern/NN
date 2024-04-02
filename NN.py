@@ -225,7 +225,7 @@ class NInput:
 
 class NLayer:
     """
-    # Simple Multi-Layer-Perceptron Layer.
+    # Multi-Layer-Perceptron Layer.
 
     Args:
         - shapes (tuple): The shape of the input and output of the layer.
@@ -317,3 +317,33 @@ class NLayer:
 
         else:
             return self.output
+
+
+class ConvNLayer:
+    """
+    # Convolutional Neural Network Layer.
+
+    Args:
+        - input_size (int): The size of the input data.
+        - output_szize (int): The size of the output data.
+        - kernel_size (int): The size of the kernel.
+        - activation (str): The activation function to use. 
+        - use_bias (bool): Whether to use bias in the layer or not, default is True.
+    """
+    def __init__(self, input_size, output_size, kernel_size, activation='linear', use_bias=True):
+        self.input_size = input_size
+        self.output_size = output_size
+        self.kernel_size = kernel_size
+        self.activation = activation
+        self.use_bias = use_bias
+        self.kernel_shape = (self.output_size, self.input_size, self.kernel_size, self.kernel_size)
+        self.weights = np.random.uniform(-1, 1, size=self.kernel_shape)
+    
+
+    def forward(self, input_data):
+        """
+        # Feed-Forward for the Layer.
+        """
+        pass
+
+    
