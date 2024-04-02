@@ -98,7 +98,7 @@ class Layers:
                 self.layers[i+1].set_weights(output_shape)
 
             
-    def train_model(self, x, y, iterations=1, learning_rate=0.001, batch_size=32):
+    def train_model(self, x, y, loss_type,  iterations=1, learning_rate=0.001, batch_size=32):
         """
         # Train the model.
 
@@ -110,6 +110,7 @@ class Layers:
         self.x = x
         self.y = y
         self.batch_size = batch_size
+        self.loss_type = loss_type
 
         
         if self.batch_size >= len(self.x):
@@ -184,24 +185,26 @@ class Layers:
         delta_input_layer = erro_input_layer * derivative_hidden_layer
         gradyan_weights_input = x_batch.T.dot(delta_input_layer)
         self.layers[1].weights += gradyan_weights_input * self.learning_rate
-
+    
     def evaluate_trained_model(self):
         '''
         # Evaluate the trained model.
-
-        Retuns:
-            - float: The accuracy of the model.
-            - np.array: The confusion matrix of the model.
         '''
+        if self.loss_type == 'categorical':
+            predicted_values = [1 if x > 0.5 else 0 for x in self.output]
+            true_values = self.y
 
-        predicted_values = [1 if x > 0.5 else 0 for x in self.output]
-        true_values = self.y
+            true_predicts = [1 if x == y else 0 for x, y in zip(predicted_values, true_values)]
 
-        true_predicts = [1 if x == y else 0 for x, y in zip(predicted_values, true_values)]
+            accuracy = sum(true_predicts) / len(true_values)
 
-        accuracy = sum(true_predicts) / len(true_values)
-
-        return accuracy, confusion_matrix(true_values, predicted_values)
+            return accuracy, confusion_matrix(true_values, predicted_values)
+        
+        elif self.loss_type == 'mse':
+            return np.mean(np.square(self.y-self.output))
+        
+        elif self.loss_type == 'mae':
+            return np.mean(np.abs(self.y-self.output))
 
     def show_loss_graph(self):
         """

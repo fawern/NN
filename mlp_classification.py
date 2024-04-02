@@ -3,8 +3,6 @@ import pandas as pd
 
 np.random.seed(0)
 
-from sklearn.model_selection import train_test_split
-
 from mlp_wrapper import LayersWrap
 
 
@@ -18,9 +16,9 @@ df['gender'] = df['gender'].map({"Male" : 0 , "Female" : 1})
 X = df.drop(columns='gender').values
 y = df['gender'].values.reshape(-1, 1)
 
-model = LayersWrap(input_data=X, output_data=y, hl_activation='sigmoid', ol_activation='sigmoid', )
+model = LayersWrap(input_data=X, output_data=y, hl_activation='sigmoid', ol_activation='sigmoid')
 
-model.fit_model(learning_rate=0.0001, iterations=100000, batch_size=1)
+model.fit_model(loss_type='categorical', learning_rate=0.0001, iterations=100000, batch_size=1)
 
 print(model.evaluate_trained_model())
 
